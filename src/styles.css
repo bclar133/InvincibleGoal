@@ -804,96 +804,153 @@ button {
 
   .game-home-link {
     right: 10px;
-    bottom: 10px;
-    font-size: 13px;
+    top: 54px;
+    bottom: auto;
+    max-width: 116px;
+    min-height: 28px;
+    padding: 5px 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
   }
 
   .game-sound-toggle {
-    right: 10px;
-    bottom: 52px;
-    min-height: 34px;
-    padding: 6px 10px;
-    font-size: 11px;
+    right: 132px;
+    top: 54px;
+    bottom: auto;
+    min-height: 28px;
+    padding: 4px 8px;
+    font-size: 10px;
   }
 
   .hud {
-    top: 10px;
-    left: 10px;
-    right: 10px;
+    top: max(6px, env(safe-area-inset-top));
+    left: 6px;
+    right: 6px;
     display: grid;
     grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   .hud__brand {
-    min-width: 0;
-    width: max-content;
-    max-width: 100%;
-    padding: 10px 12px;
+    display: none;
   }
 
   .hud__stats {
-    grid-template-columns: 64px minmax(128px, 1fr) 152px;
-    width: min(100%, 380px);
+    grid-template-columns: 42px minmax(84px, 1fr) minmax(100px, 0.8fr);
+    width: 100%;
   }
 
   .hud__stats div {
-    min-height: 60px;
-    padding: 8px;
+    min-height: 42px;
+    padding: 5px 6px;
   }
 
   .hud h1 {
-    font-size: 22px;
-  }
-
-  .hud__stats strong {
     font-size: 18px;
   }
 
+  .hud__stats strong {
+    margin-top: 2px;
+    font-size: 13px;
+  }
+
   #wind {
-    font-size: 19px;
+    font-size: 13px;
   }
 
   .hud__stats span {
-    font-size: 11px;
+    font-size: 9px;
+  }
+
+  #kick-position {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .wind-display {
-    gap: 8px;
+    gap: 5px;
   }
 
   .wind-vane {
-    width: 44px;
-    height: 28px;
-    flex-basis: 44px;
+    width: 30px;
+    height: 20px;
+    flex-basis: 30px;
+  }
+
+  .vane-arrow {
+    left: 7px;
+    right: 4px;
+    height: 3px;
+  }
+
+  .vane-head {
+    left: -7px;
+    border-top-width: 6px;
+    border-bottom-width: 6px;
+    border-right-width: 11px;
   }
 
   .power-panel {
     top: auto;
-    bottom: 205px;
-    left: 10px;
-    width: 74px;
-    padding: 10px;
+    bottom: 62px;
+    left: 6px;
+    width: 48px;
+    padding: 6px;
+  }
+
+  .meter-label {
+    gap: 1px;
+  }
+
+  .meter-label span {
+    font-size: 9px;
+  }
+
+  .meter-label strong {
+    font-size: 13px;
   }
 
   .power-meter {
-    width: 30px;
-    height: 170px;
+    width: 20px;
+    height: 116px;
+    margin-top: 6px;
+    border-radius: 6px;
   }
 
   .direction-panel {
-    left: 92px;
-    right: 10px;
-    bottom: 10px;
-    padding: 10px;
+    left: 60px;
+    right: 6px;
+    bottom: max(6px, env(safe-area-inset-bottom));
+    padding: 7px 8px 9px;
+  }
+
+  .direction-meta {
+    margin-bottom: 4px;
+  }
+
+  .direction-meta span {
+    font-size: 9px;
+  }
+
+  .direction-meta strong {
+    font-size: 13px;
+  }
+
+  .direction-meter {
+    height: 20px;
   }
 
   .coach-line {
-    left: 92px;
-    right: 10px;
-    bottom: 112px;
+    left: 60px;
+    right: 150px;
+    bottom: 62px;
     width: auto;
-    padding: 13px 15px;
-    font-size: 20px;
+    padding: 8px 10px;
+    font-size: 14px;
   }
 
   .coach-line::after {
@@ -904,20 +961,30 @@ button {
   }
 
   .message-panel {
-    top: 182px;
-    left: 10px;
-    right: 10px;
-    bottom: auto;
-    width: auto;
+    top: auto;
+    left: auto;
+    right: 6px;
+    bottom: 62px;
+    width: min(142px, calc(100vw - 120px));
     min-height: 0;
     grid-template-columns: 1fr;
-    gap: 9px;
-    padding: 13px;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  #app:not(.phase-game-over):not(.phase-won) #result-label,
+  #app:not(.phase-game-over):not(.phase-won) .instruction-label {
+    display: none;
+  }
+
+  #phase-label {
+    font-size: 13px;
   }
 
   #action-button {
     width: 100%;
-    min-height: 48px;
+    min-height: 34px;
+    font-size: 12px;
   }
 }
 
@@ -933,54 +1000,58 @@ button {
   }
 
   .hud__stats {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 38px minmax(78px, 1fr) minmax(92px, 0.85fr);
   }
 
   .hud__stats div:nth-child(3) {
-    grid-column: 1 / -1;
-    border-top: 1px solid var(--line);
-    border-left: 0;
-    min-height: 68px;
+    grid-column: auto;
+    border-top: 0;
+    border-left: 1px solid var(--line);
+    min-height: 40px;
     min-width: 0;
   }
 
   .hud__stats div {
-    min-height: 62px;
+    min-height: 40px;
+    padding: 5px;
   }
 
   .wind-display {
-    gap: 8px;
+    gap: 4px;
   }
 
   #wind {
-    font-size: 20px;
+    font-size: 12px;
   }
 
   .wind-vane {
-    width: 46px;
-    height: 29px;
-    flex-basis: 46px;
+    width: 28px;
+    height: 19px;
+    flex-basis: 28px;
   }
 
   .power-panel {
-    bottom: 218px;
+    bottom: 60px;
   }
 
   .direction-panel {
-    bottom: 10px;
+    left: 58px;
+    right: 6px;
+    bottom: max(6px, env(safe-area-inset-bottom));
   }
 
   .coach-line {
-    left: 94px;
-    right: 10px;
-    bottom: 112px;
-    font-size: 19px;
+    left: 58px;
+    right: 150px;
+    bottom: 60px;
+    font-size: 13px;
   }
 
   .message-panel {
-    top: 250px;
-    left: 94px;
-    right: 10px;
-    width: auto;
+    top: auto;
+    left: auto;
+    right: 6px;
+    bottom: 60px;
+    width: min(138px, calc(100vw - 116px));
   }
 }
