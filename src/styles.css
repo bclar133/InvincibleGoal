@@ -205,6 +205,35 @@ button {
   font-size: clamp(23px, 1.7vw, 30px);
 }
 
+.menu-secondary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.sound-toggle {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: #dce9e9;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  font-family: Bungee, Rajdhani, ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.sound-toggle.is-muted {
+  color: #151006;
+  background: linear-gradient(180deg, #ffd766, var(--orange));
+  box-shadow: 0 10px 22px rgba(236, 127, 64, 0.2);
+}
+
 .menu-link,
 .game-home-link {
   color: #dce9e9;
@@ -233,16 +262,30 @@ button {
   backdrop-filter: blur(14px);
 }
 
+.game-sound-toggle {
+  position: absolute;
+  right: 18px;
+  bottom: 62px;
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  background: var(--panel);
+  box-shadow: 0 12px 32px var(--shadow);
+  backdrop-filter: blur(14px);
+}
+
 .hud,
 .power-panel,
 .direction-panel,
 .message-panel,
-.game-home-link {
+.game-home-link,
+.game-sound-toggle {
   opacity: 0;
 }
 
 .message-panel,
-.game-home-link {
+.game-home-link,
+.game-sound-toggle {
   pointer-events: none;
 }
 
@@ -250,12 +293,14 @@ button {
 #app[class^="phase-"]:not(.phase-menu) .power-panel,
 #app[class^="phase-"]:not(.phase-menu) .direction-panel,
 #app[class^="phase-"]:not(.phase-menu) .message-panel,
-#app[class^="phase-"]:not(.phase-menu) .game-home-link {
+#app[class^="phase-"]:not(.phase-menu) .game-home-link,
+#app[class^="phase-"]:not(.phase-menu) .game-sound-toggle {
   opacity: 1;
 }
 
 #app[class^="phase-"]:not(.phase-menu) .message-panel,
-#app[class^="phase-"]:not(.phase-menu) .game-home-link {
+#app[class^="phase-"]:not(.phase-menu) .game-home-link,
+#app[class^="phase-"]:not(.phase-menu) .game-sound-toggle {
   pointer-events: auto;
 }
 
@@ -761,6 +806,14 @@ button {
     right: 10px;
     bottom: 10px;
     font-size: 13px;
+  }
+
+  .game-sound-toggle {
+    right: 10px;
+    bottom: 52px;
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 11px;
   }
 
   .hud {

@@ -17,6 +17,7 @@ const POST_RADIUS = 0.075;
 const POST_GOAL_INSIDE_SHARE = 0.75;
 const CELEBRATION_SECONDS = 6.5;
 const TWO_PI = Math.PI * 2;
+const SOUND_MUTED_STORAGE_KEY = "invincibleGoalSoundMuted";
 
 const kicks = [
   { name: "Centre 22m", x: 0, z: 22 },
@@ -57,6 +58,7 @@ const ui = {
   fanfare: document.querySelector("#fanfare"),
   fanfareSmall: document.querySelector("#fanfare-small"),
   fanfareLarge: document.querySelector("#fanfare-large"),
+  soundButtons: Array.from(document.querySelectorAll("[data-sound-toggle]")),
 };
 
 ui.app.className = "phase-menu";
@@ -107,6 +109,7 @@ const state = {
   goalFlash: 0,
   fanfareKind: "",
   goalCall: "",
+  soundMuted: loadSoundMuted(),
   selectedBackground: "stadium",
   menuSummary: "Kick 10 straight. Time the power, hold your nerve on direction, and watch the wind.",
   windSequence: createWindSequence(),
@@ -360,6 +363,13 @@ function bindInputHandlers() {
       event.preventDefault();
       setBackground(button.dataset.background);
       syncUi();
+    });
+  });
+
+  ui.soundButtons.forEach((button) => {
+    button.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      toggleSound();
     });
   });
 
@@ -983,6 +993,17 @@ function syncBackgroundButtons() {
     const isSelected = button.dataset.background === state.selectedBackground;
     button.classList.toggle("is-selected", isSelected);
     button.setAttribute("aria-pressed", isSelected ? "true" : "false");
+  });
+}
+
+function syncSoundButtons() {
+  const label = state.soundMuted ? "Unmute" : "Mute";
+  const ariaLabel = state.soundMuted ? "Unmute sound" : "Mute sound";
+  ui.soundButtons.forEach((button) => {
+    button.textContent = label;
+    button.classList.toggle("is-muted", state.soundMuted);
+    button.setAttribute("aria-pressed", state.soundMuted ? "true" : "false");
+    button.setAttribute("aria-label", ariaLabel);
   });
 }
 
@@ -2448,6 +2469,35 @@ function clearMenuReturnTimer() {
   }
 }
 
+function toggleSound() {
+  state.soundMuted = !state.soundMuted;
+  saveSoundMuted();
+  syncSoundButtons();
+
+  if (state.soundMuted) {
+    audioUnlocked = false;
+    audioContext?.suspend?.().catch(() => {});
+  } else {
+    audioUnlocked = false;
+    unlockAudio();
+    playSoundToggleSound();
+  }
+}
+
+function loadSoundMuted() {
+  try {
+    return window.localStorage.getItem(SOUND_MUTED_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function saveSoundMuted() {
+  try {
+    window.localStorage.setItem(SOUND_MUTED_STORAGE_KEY, state.soundMuted ? "true" : "false");
+  } catch {}
+}
+
 function recordBestScore(score = state.streak) {
   state.bestScore = Math.max(state.bestScore, score);
 }
@@ -2631,6 +2681,10 @@ function calculatePostContact(crossingX, heightAtGoal) {
 }
 
 function getAudioContext() {
+  if (state.soundMuted) {
+    return null;
+  }
+
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) {
     return null;
@@ -2648,6 +2702,10 @@ function getAudioContext() {
 }
 
 function unlockAudio() {
+  if (state.soundMuted) {
+    return;
+  }
+
   const context = getAudioContext();
   if (!context || audioUnlocked) {
     return;
@@ -2738,7 +2796,7 @@ function playKickSound(power) {
   }
 
   const start = context.currentTime;
-  const volume = THREE.MathUtils.lerp(0.06, 0.1, power);
+  const volume = THREE.MathUtils.lerp(0.16, 0.25, power);
   const bus = createSoundBus(context, start, volume, 0.2);
   addTone(context, bus, {
     type: "triangle",
@@ -2746,12 +2804,12 @@ function playKickSound(power) {
     duration: 0.17,
     from: THREE.MathUtils.lerp(74, 118, power),
     to: 42,
-    volume: 0.84,
+    volume: 0.95,
   });
   addNoise(context, bus, {
     start,
     duration: 0.08,
-    volume: 0.42,
+    volume: 0.54,
     filterType: "lowpass",
     frequency: 560,
   });
@@ -2764,7 +2822,7 @@ function playPostHitSound(side) {
   }
 
   const start = context.currentTime;
-  const bus = createSoundBus(context, start, 0.052, 0.42, THREE.MathUtils.clamp(side * 0.28, -0.28, 0.28));
+  const bus = createSoundBus(context, start, 0.11, 0.42, THREE.MathUtils.clamp(side * 0.28, -0.28, 0.28));
   addTone(context, bus, {
     type: "sine",
     start,
@@ -2784,7 +2842,7 @@ function playPostHitSound(side) {
   addNoise(context, bus, {
     start,
     duration: 0.045,
-    volume: 0.3,
+    volume: 0.38,
     filterType: "highpass",
     frequency: 1800,
   });
@@ -2797,7 +2855,7 @@ function playGroundHitSound(weight) {
   }
 
   const start = context.currentTime;
-  const volume = THREE.MathUtils.clamp(0.045 + weight * 0.03, 0.045, 0.085);
+  const volume = THREE.MathUtils.clamp(0.08 + weight * 0.05, 0.08, 0.15);
   const bus = createSoundBus(context, start, volume, 0.18);
   addTone(context, bus, {
     type: "sine",
@@ -2823,7 +2881,7 @@ function playVictorySound() {
   }
 
   const start = context.currentTime;
-  const bus = createSoundBus(context, start, 0.045, 1.35);
+  const bus = createSoundBus(context, start, 0.08, 1.35);
   [523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
     addTone(context, bus, {
       type: "triangle",
@@ -2843,6 +2901,32 @@ function playVictorySound() {
       filterType: "highpass",
       frequency: 2200 + index * 580,
     });
+  });
+}
+
+function playSoundToggleSound() {
+  const context = getAudioContext();
+  if (!context) {
+    return;
+  }
+
+  const start = context.currentTime;
+  const bus = createSoundBus(context, start, 0.065, 0.26);
+  addTone(context, bus, {
+    type: "triangle",
+    start,
+    duration: 0.11,
+    from: 520,
+    to: 760,
+    volume: 0.5,
+  });
+  addTone(context, bus, {
+    type: "sine",
+    start: start + 0.08,
+    duration: 0.14,
+    from: 760,
+    to: 980,
+    volume: 0.34,
   });
 }
 
@@ -2937,6 +3021,7 @@ function syncUi() {
   ui.windVane.style.setProperty("--wind-angle", `${(wind.angle + 90) % 360}deg`);
   ui.windVane.style.setProperty("--wind-sway", `${Math.max(2, wind.speed * 0.42)}deg`);
   syncBackgroundButtons();
+  syncSoundButtons();
 
   const need = powerNeeded(kick, wind);
   ui.powerTarget.style.bottom = `${need * 100}%`;
