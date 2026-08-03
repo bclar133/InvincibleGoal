@@ -15,6 +15,7 @@ const BALL_TEE_Z_OFFSET = -0.36;
 const BALL_POST_RADIUS = 0.56;
 const POST_RADIUS = 0.075;
 const POST_GOAL_INSIDE_SHARE = 0.75;
+const CELEBRATION_SECONDS = 6.5;
 
 const kicks = [
   { name: "Centre 22m", x: 0, z: 22 },
@@ -69,6 +70,7 @@ let ballGroup = null;
 let teeGroup = null;
 let shadow = null;
 let kickMarker = null;
+let celebrationGroup = null;
 const backgroundGroups = {};
 const ambientFlyers = {
   stadium: [],
@@ -85,6 +87,9 @@ let audioContext = null;
 let audioUnlocked = false;
 let gameReady = false;
 let startupError = "";
+let celebrationTimer = 0;
+let nextFireworkBurst = 0;
+const fireworks = [];
 
 const state = {
   phase: "menu",
@@ -107,6 +112,7 @@ const state = {
 };
 
 const missCalls = ["Bad luck", "No goal", "Maybe next time", "Just wide"];
+const fireworkColors = [0xffd766, 0x80c8f8, 0x78d47e, 0xff8b6b, 0xf7fff3];
 
 const materials = {
   field: new THREE.MeshStandardMaterial({ color: 0x28743c, roughness: 0.88 }),
@@ -301,7 +307,9 @@ function initializeGame() {
     Object.values(backgroundGroups).forEach((group) => scene.add(group));
     goalGroup = buildGoal();
     ({ ballGroup, teeGroup, shadow, kickMarker } = buildBall());
-    scene.add(ballGroup, teeGroup, shadow, kickMarker);
+    celebrationGroup = new THREE.Group();
+    celebrationGroup.name = "perfect-run-fireworks";
+    scene.add(ballGroup, teeGroup, shadow, kickMarker, celebrationGroup);
 
     gameReady = true;
     startupError = "";
@@ -1309,6 +1317,7 @@ function addLightBeam(group, start, end, radius, opacity) {
     materials.lightBeam.clone(),
   );
   beam.material.opacity = opacity;
+  beam.renderOrder = 6;
   beam.position.copy(start).addScaledVector(direction, 0.5);
   beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), direction.normalize());
   group.add(beam);
@@ -1803,8 +1812,144 @@ function tick(now) {
   updateFlight(delta);
   updateGoalFlash(delta);
   updateAmbientFlyers(delta);
+  updateCelebration(delta);
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
+}
+
+function startCelebration() {
+  if (!celebrationGroup) {
+    return;
+  }
+
+  clearCelebration();
+  celebrationTimer = CELEBRATION_SECONDS;
+  nextFireworkBurst = 0;
+
+  for (let index = 0; index < 4; index += 1) {
+    spawnFireworkBurst(index * 0.18);
+  }
+}
+
+function updateCelebration(delta) {
+  if (!celebrationGroup) {
+    return;
+  }
+
+  if (celebrationTimer > 0) {
+    celebrationTimer = Math.max(0, celebrationTimer - delta);
+    nextFireworkBurst -= delta;
+
+    if (nextFireworkBurst <= 0) {
+      spawnFireworkBurst();
+
+      if (Math.random() > 0.58) {
+        spawnFireworkBurst(0.08);
+      }
+
+      nextFireworkBurst = THREE.MathUtils.lerp(0.22, 0.46, Math.random());
+    }
+  }
+
+  for (let index = fireworks.length - 1; index >= 0; index -= 1) {
+    const burst = fireworks[index];
+    burst.age += delta;
+
+    if (burst.age < 0) {
+      continue;
+    }
+
+    if (burst.age >= burst.duration) {
+      burst.points.removeFromParent();
+      burst.points.geometry.dispose();
+      burst.points.material.dispose();
+      fireworks.splice(index, 1);
+      continue;
+    }
+
+    const positions = burst.points.geometry.attributes.position.array;
+    for (let particle = 0; particle < burst.count; particle += 1) {
+      const offset = particle * 3;
+      positions[offset] += burst.velocities[offset] * delta;
+      positions[offset + 1] += burst.velocities[offset + 1] * delta;
+      positions[offset + 2] += burst.velocities[offset + 2] * delta;
+      burst.velocities[offset + 1] -= burst.gravity * delta;
+    }
+
+    const progress = burst.age / burst.duration;
+    burst.points.geometry.attributes.position.needsUpdate = true;
+    burst.points.material.opacity = Math.pow(1 - progress, 1.35);
+    burst.points.material.size = burst.baseSize * (1 - progress * 0.38);
+  }
+}
+
+function spawnFireworkBurst(delay = 0) {
+  if (!celebrationGroup) {
+    return;
+  }
+
+  const count = 52 + Math.floor(Math.random() * 38);
+  const origin = new THREE.Vector3(
+    THREE.MathUtils.lerp(-22, 22, Math.random()),
+    THREE.MathUtils.lerp(10.5, 20, Math.random()),
+    THREE.MathUtils.lerp(-34, -13, Math.random()),
+  );
+  const positions = new Float32Array(count * 3);
+  const velocities = new Float32Array(count * 3);
+
+  for (let index = 0; index < count; index += 1) {
+    const offset = index * 3;
+    const theta = Math.random() * Math.PI * 2;
+    const lift = THREE.MathUtils.lerp(-0.2, 0.9, Math.random());
+    const spread = Math.sqrt(Math.max(0.08, 1 - lift * lift));
+    const speed = THREE.MathUtils.lerp(2.6, 7.2, Math.random());
+
+    positions[offset] = origin.x;
+    positions[offset + 1] = origin.y;
+    positions[offset + 2] = origin.z;
+    velocities[offset] = Math.cos(theta) * spread * speed;
+    velocities[offset + 1] = lift * speed + 1.1;
+    velocities[offset + 2] = Math.sin(theta) * spread * speed * 0.72;
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+
+  const material = new THREE.PointsMaterial({
+    color: fireworkColors[Math.floor(Math.random() * fireworkColors.length)],
+    size: THREE.MathUtils.lerp(0.32, 0.52, Math.random()),
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const points = new THREE.Points(geometry, material);
+  points.renderOrder = 14;
+  celebrationGroup.add(points);
+  fireworks.push({
+    points,
+    velocities,
+    count,
+    age: -delay,
+    duration: THREE.MathUtils.lerp(1.1, 1.75, Math.random()) + delay,
+    gravity: THREE.MathUtils.lerp(3.6, 5.2, Math.random()),
+    baseSize: material.size,
+  });
+}
+
+function clearCelebration() {
+  celebrationTimer = 0;
+  nextFireworkBurst = 0;
+
+  for (const burst of fireworks) {
+    burst.points.removeFromParent();
+    burst.points.geometry.dispose();
+    burst.points.material.dispose();
+  }
+
+  fireworks.length = 0;
 }
 
 function updateAmbientFlyers(delta) {
@@ -1889,10 +2034,10 @@ function addAmbientFlyer(backgroundId, layer, flyer) {
 function createAmbientFlight(kind) {
   const direction = Math.random() > 0.5 ? 1 : -1;
   const z = kind === "spaceship"
-    ? THREE.MathUtils.lerp(-18, 8, Math.random())
+    ? THREE.MathUtils.lerp(-58, -38, Math.random())
     : THREE.MathUtils.lerp(-32, 68, Math.random());
   const endZ = z + (kind === "spaceship"
-    ? THREE.MathUtils.lerp(-10, 10, Math.random())
+    ? THREE.MathUtils.lerp(-4, 6, Math.random())
     : THREE.MathUtils.lerp(-18, 18, Math.random()));
   const startX = -direction * (kind === "spaceship"
     ? THREE.MathUtils.lerp(50, 64, Math.random())
@@ -2204,9 +2349,13 @@ function finishFlight(flight) {
       : "The flags are up";
     if (state.kickIndex === kicks.length - 1) {
       state.phase = "won";
-      state.result = "10 straight. Perfect card.";
+      state.fanfareKind = "perfect";
+      state.goalCall = "Perfect card";
+      state.result = "10 from 10. Invincible.";
       state.menuSummary = `Last run: 10 / ${kicks.length}. Perfect card.`;
-      scheduleMenuReturn(state.menuSummary);
+      startCelebration();
+      playVictorySound();
+      scheduleMenuReturn(state.menuSummary, CELEBRATION_SECONDS * 1000);
     } else {
       state.phase = "between";
       state.result = flight.postHit
@@ -2236,6 +2385,7 @@ function startNewGame() {
   }
 
   clearMenuReturnTimer();
+  clearCelebration();
   state.phase = "power";
   state.kickIndex = 0;
   state.streak = 0;
@@ -2255,6 +2405,7 @@ function startNewGame() {
 
 function showMainMenu(summary = state.menuSummary) {
   clearMenuReturnTimer();
+  clearCelebration();
   state.phase = "menu";
   state.kickIndex = 0;
   state.streak = 0;
@@ -2276,11 +2427,11 @@ function showMainMenu(summary = state.menuSummary) {
   syncUi();
 }
 
-function scheduleMenuReturn(summary) {
+function scheduleMenuReturn(summary, delay = 1800) {
   clearMenuReturnTimer();
   menuReturnTimer = window.setTimeout(() => {
     showMainMenu(summary);
-  }, 1800);
+  }, delay);
 }
 
 function clearMenuReturnTimer() {
@@ -2658,6 +2809,36 @@ function playGroundHitSound(weight) {
   });
 }
 
+function playVictorySound() {
+  const context = getAudioContext();
+  if (!context) {
+    return;
+  }
+
+  const start = context.currentTime;
+  const bus = createSoundBus(context, start, 0.045, 1.35);
+  [523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
+    addTone(context, bus, {
+      type: "triangle",
+      start: start + index * 0.15,
+      duration: 0.22,
+      from: frequency,
+      to: frequency * 1.08,
+      volume: 0.42,
+    });
+  });
+
+  [0.12, 0.42, 0.72].forEach((offset, index) => {
+    addNoise(context, bus, {
+      start: start + offset,
+      duration: 0.16,
+      volume: 0.11 - index * 0.018,
+      filterType: "highpass",
+      frequency: 2200 + index * 580,
+    });
+  });
+}
+
 function activeKick() {
   return kicks[state.kickIndex];
 }
@@ -2826,10 +3007,20 @@ function windLabel(wind) {
 }
 
 function syncFanfare() {
-  const hasFanfare = state.fanfareKind === "goal" || state.fanfareKind === "miss";
+  const hasFanfare =
+    state.fanfareKind === "goal" ||
+    state.fanfareKind === "miss" ||
+    state.fanfareKind === "perfect";
   ui.fanfare.classList.toggle("is-visible", hasFanfare);
   ui.fanfare.classList.toggle("is-miss", state.fanfareKind === "miss");
+  ui.fanfare.classList.toggle("is-perfect", state.fanfareKind === "perfect");
   ui.fanfare.setAttribute("aria-hidden", hasFanfare ? "false" : "true");
+
+  if (state.fanfareKind === "perfect") {
+    ui.fanfareSmall.textContent = state.goalCall || "Perfect card";
+    ui.fanfareLarge.textContent = "10/10!";
+    return;
+  }
 
   if (state.fanfareKind === "goal") {
     ui.fanfareSmall.textContent = state.goalCall || "The flags are up";

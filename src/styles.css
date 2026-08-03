@@ -759,6 +759,27 @@ button {
   text-shadow: 0 7px 28px rgba(220, 77, 77, 0.38);
 }
 
+.fanfare.is-perfect {
+  border-color: rgba(255, 215, 102, 0.62);
+  background:
+    linear-gradient(120deg, rgba(243, 193, 79, 0.16), rgba(8, 20, 16, 0.88) 48%),
+    rgba(8, 20, 16, 0.9);
+  box-shadow:
+    0 24px 86px rgba(0, 0, 0, 0.42),
+    0 0 44px rgba(243, 193, 79, 0.24);
+}
+
+.fanfare.is-perfect p {
+  color: #ffd766;
+}
+
+.fanfare.is-perfect strong {
+  color: #fff8d7;
+  text-shadow:
+    0 8px 30px rgba(255, 215, 102, 0.46),
+    0 0 18px rgba(128, 200, 248, 0.32);
+}
+
 @media (max-width: 760px) {
   .main-menu {
     align-items: flex-start;
