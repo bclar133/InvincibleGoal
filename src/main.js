@@ -1848,8 +1848,8 @@ function startCelebration() {
   celebrationTimer = CELEBRATION_SECONDS;
   nextFireworkBurst = 0;
 
-  for (let index = 0; index < 4; index += 1) {
-    spawnFireworkBurst(index * 0.18);
+  for (let index = 0; index < 8; index += 1) {
+    spawnFireworkBurst(index * 0.09);
   }
 }
 
@@ -1865,11 +1865,15 @@ function updateCelebration(delta) {
     if (nextFireworkBurst <= 0) {
       spawnFireworkBurst();
 
-      if (Math.random() > 0.58) {
-        spawnFireworkBurst(0.08);
+      if (Math.random() > 0.26) {
+        spawnFireworkBurst(0.06);
       }
 
-      nextFireworkBurst = THREE.MathUtils.lerp(0.22, 0.46, Math.random());
+      if (Math.random() > 0.68) {
+        spawnFireworkBurst(0.13);
+      }
+
+      nextFireworkBurst = THREE.MathUtils.lerp(0.12, 0.28, Math.random());
     }
   }
 
@@ -1910,11 +1914,11 @@ function spawnFireworkBurst(delay = 0) {
     return;
   }
 
-  const count = 52 + Math.floor(Math.random() * 38);
+  const count = 96 + Math.floor(Math.random() * 80);
   const origin = new THREE.Vector3(
-    THREE.MathUtils.lerp(-22, 22, Math.random()),
-    THREE.MathUtils.lerp(10.5, 20, Math.random()),
-    THREE.MathUtils.lerp(-34, -13, Math.random()),
+    THREE.MathUtils.lerp(-30, 30, Math.random()),
+    THREE.MathUtils.lerp(12.5, 24, Math.random()),
+    THREE.MathUtils.lerp(-38, -10, Math.random()),
   );
   const positions = new Float32Array(count * 3);
   const velocities = new Float32Array(count * 3);
@@ -1922,16 +1926,16 @@ function spawnFireworkBurst(delay = 0) {
   for (let index = 0; index < count; index += 1) {
     const offset = index * 3;
     const theta = Math.random() * Math.PI * 2;
-    const lift = THREE.MathUtils.lerp(-0.2, 0.9, Math.random());
+    const lift = THREE.MathUtils.lerp(-0.28, 0.98, Math.random());
     const spread = Math.sqrt(Math.max(0.08, 1 - lift * lift));
-    const speed = THREE.MathUtils.lerp(2.6, 7.2, Math.random());
+    const speed = THREE.MathUtils.lerp(4.2, 10.8, Math.random());
 
     positions[offset] = origin.x;
     positions[offset + 1] = origin.y;
     positions[offset + 2] = origin.z;
     velocities[offset] = Math.cos(theta) * spread * speed;
-    velocities[offset + 1] = lift * speed + 1.1;
-    velocities[offset + 2] = Math.sin(theta) * spread * speed * 0.72;
+    velocities[offset + 1] = lift * speed + 1.55;
+    velocities[offset + 2] = Math.sin(theta) * spread * speed * 0.82;
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -1939,7 +1943,7 @@ function spawnFireworkBurst(delay = 0) {
 
   const material = new THREE.PointsMaterial({
     color: fireworkColors[Math.floor(Math.random() * fireworkColors.length)],
-    size: THREE.MathUtils.lerp(0.32, 0.52, Math.random()),
+    size: THREE.MathUtils.lerp(0.54, 0.9, Math.random()),
     sizeAttenuation: true,
     transparent: true,
     opacity: 0,
@@ -1955,8 +1959,8 @@ function spawnFireworkBurst(delay = 0) {
     velocities,
     count,
     age: -delay,
-    duration: THREE.MathUtils.lerp(1.1, 1.75, Math.random()) + delay,
-    gravity: THREE.MathUtils.lerp(3.6, 5.2, Math.random()),
+    duration: THREE.MathUtils.lerp(1.35, 2.2, Math.random()) + delay,
+    gravity: THREE.MathUtils.lerp(3.2, 4.8, Math.random()),
     baseSize: material.size,
   });
 }
