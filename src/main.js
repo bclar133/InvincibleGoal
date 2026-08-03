@@ -16,6 +16,7 @@ const BALL_POST_RADIUS = 0.56;
 const POST_RADIUS = 0.075;
 const POST_GOAL_INSIDE_SHARE = 0.75;
 const CELEBRATION_SECONDS = 6.5;
+const TWO_PI = Math.PI * 2;
 
 const kicks = [
   { name: "Centre 22m", x: 0, z: 22 },
@@ -2099,14 +2100,20 @@ function updateMeters(now) {
   const phaseSeconds = (now - state.phaseStarted) / 1000;
 
   if (state.phase === "power") {
-    state.livePower = 0.5 + 0.5 * Math.sin(phaseSeconds * powerSpeed(kick));
+    state.livePower = edgeEasedMeter(phaseSeconds * powerSpeed(kick));
   }
 
   if (state.phase === "direction") {
-    state.liveDirection = Math.sin(phaseSeconds * directionSpeed(kick));
+    state.liveDirection = edgeEasedMeter(phaseSeconds * directionSpeed(kick)) * 2 - 1;
   }
 
   syncMeters();
+}
+
+function edgeEasedMeter(phase) {
+  const cycle = (((phase / TWO_PI) + 0.25) % 1 + 1) % 1;
+  const pingPong = cycle < 0.5 ? cycle * 2 : (1 - cycle) * 2;
+  return smootherStep(pingPong);
 }
 
 function updateFlight(delta) {
@@ -3059,6 +3066,10 @@ function easeInQuad(value) {
 
 function easeOutCubic(value) {
   return 1 - Math.pow(1 - value, 3);
+}
+
+function smootherStep(value) {
+  return value * value * value * (value * (value * 6 - 15) + 10);
 }
 
 function resizeRenderer() {
