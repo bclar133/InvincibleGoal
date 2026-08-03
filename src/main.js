@@ -2666,7 +2666,7 @@ function windCarry(kick, wind) {
 }
 
 function powerSpeed(kick) {
-  return 4.2 + state.kickIndex * 0.31 + Math.abs(kick.x) * 0.018;
+  return 4.85 + state.kickIndex * 0.35 + Math.abs(kick.x) * 0.02;
 }
 
 function directionSpeed(kick) {
