@@ -60,24 +60,15 @@ const ui = {
 ui.app.className = "phase-menu";
 
 const canvas = document.querySelector("#game-canvas");
-const renderer = new THREE.WebGLRenderer({
-  canvas,
-  antialias: true,
-  preserveDrawingBuffer: true,
-});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.08;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-const scene = new THREE.Scene();
-scene.background = createSkyTexture();
-scene.fog = new THREE.Fog(0xb7dce8, 95, 205);
-
-const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 240);
-const clock = new THREE.Clock();
+let renderer = null;
+let scene = null;
+let camera = null;
+let clock = null;
+let goalGroup = null;
+let ballGroup = null;
+let teeGroup = null;
+let shadow = null;
+let kickMarker = null;
 const backgroundGroups = {};
 const ambientFlyers = {
   stadium: [],
@@ -92,6 +83,8 @@ const ambientFlightState = {
 let menuReturnTimer = null;
 let audioContext = null;
 let audioUnlocked = false;
+let gameReady = false;
+let startupError = "";
 
 const state = {
   phase: "menu",
@@ -278,63 +271,99 @@ const materials = {
   }),
 };
 
-setupLights();
-buildField();
-Object.assign(backgroundGroups, buildBackgrounds());
-Object.values(backgroundGroups).forEach((group) => scene.add(group));
-const goalGroup = buildGoal();
-const { ballGroup, teeGroup, shadow, kickMarker } = buildBall();
-scene.add(ballGroup, teeGroup, shadow, kickMarker);
+bindInputHandlers();
+initializeGame();
 
-placeKick(0);
-setBackground(state.selectedBackground);
-syncUi();
+function initializeGame() {
+  try {
+    renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      preserveDrawingBuffer: true,
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-window.addEventListener("resize", resizeRenderer);
-window.addEventListener("keydown", (event) => {
-  if (event.code === "Space" && state.phase !== "menu") {
+    scene = new THREE.Scene();
+    scene.background = createSkyTexture();
+    scene.fog = new THREE.Fog(0xb7dce8, 95, 205);
+
+    camera = new THREE.PerspectiveCamera(45, 1, 0.1, 240);
+    clock = new THREE.Clock();
+
+    setupLights();
+    buildField();
+    Object.assign(backgroundGroups, buildBackgrounds());
+    Object.values(backgroundGroups).forEach((group) => scene.add(group));
+    goalGroup = buildGoal();
+    ({ ballGroup, teeGroup, shadow, kickMarker } = buildBall());
+    scene.add(ballGroup, teeGroup, shadow, kickMarker);
+
+    gameReady = true;
+    startupError = "";
+    placeKick(0);
+    setBackground(state.selectedBackground);
+    syncUi();
+
+    window.addEventListener("resize", resizeRenderer);
+    resizeRenderer();
+    requestAnimationFrame(tick);
+  } catch (error) {
+    console.error("Unable to start the 3D field.", error);
+    startupError =
+      "The 3D field did not start. Try refreshing, or use a browser with WebGL enabled.";
+    state.menuSummary = startupError;
+    syncUi();
+  }
+}
+
+function bindInputHandlers() {
+  window.addEventListener("keydown", (event) => {
+    if (event.code === "Space" && state.phase !== "menu") {
+      event.preventDefault();
+      unlockAudio();
+      handleAction();
+    }
+
+    if (event.key.toLowerCase() === "r" && isFinalPhase()) {
+      showMainMenu();
+    }
+  });
+
+  ui.actionButton.addEventListener("pointerdown", (event) => {
     event.preventDefault();
     unlockAudio();
     handleAction();
-  }
-
-  if (event.key.toLowerCase() === "r" && isFinalPhase()) {
-    showMainMenu();
-  }
-});
-
-ui.actionButton.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  unlockAudio();
-  handleAction();
-});
-
-ui.newGameButton.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  unlockAudio();
-  startNewGame();
-});
-
-ui.backgroundButtons.forEach((button) => {
-  button.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    setBackground(button.dataset.background);
-    syncUi();
   });
-});
 
-canvas.addEventListener("pointerdown", (event) => {
-  if (state.phase === "menu") {
-    return;
-  }
+  ui.newGameButton.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    unlockAudio();
+    startNewGame();
+  });
 
-  event.preventDefault();
-  unlockAudio();
-  handleAction();
-});
+  ui.backgroundButtons.forEach((button) => {
+    button.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      setBackground(button.dataset.background);
+      syncUi();
+    });
+  });
 
-resizeRenderer();
-requestAnimationFrame(tick);
+  canvas.addEventListener("pointerdown", (event) => {
+    if (state.phase === "menu") {
+      return;
+    }
+
+    event.preventDefault();
+    unlockAudio();
+    handleAction();
+  });
+}
 
 function setupLights() {
   const ambient = new THREE.HemisphereLight(0xeef8ff, 0x1f4c2d, 1.18);
@@ -904,8 +933,19 @@ function addPlanet(group, x, y, z, radius, color, accent, hasRing) {
 }
 
 function setBackground(backgroundId) {
-  const nextBackground = backgroundGroups[backgroundId] ? backgroundId : "stadium";
+  const hasMenuOption = ui.backgroundButtons.some(
+    (button) => button.dataset.background === backgroundId,
+  );
+  const nextBackground = (backgroundGroups[backgroundId] || hasMenuOption)
+    ? backgroundId
+    : "stadium";
   state.selectedBackground = nextBackground;
+  syncBackgroundButtons();
+
+  if (!gameReady || !scene || !renderer) {
+    ui.app.dataset.scene = nextBackground;
+    return;
+  }
 
   Object.entries(backgroundGroups).forEach(([id, group]) => {
     group.visible = id === nextBackground;
@@ -927,8 +967,11 @@ function setBackground(backgroundId) {
   }
 
   ui.app.dataset.scene = nextBackground;
+}
+
+function syncBackgroundButtons() {
   ui.backgroundButtons.forEach((button) => {
-    const isSelected = button.dataset.background === nextBackground;
+    const isSelected = button.dataset.background === state.selectedBackground;
     button.classList.toggle("is-selected", isSelected);
     button.setAttribute("aria-pressed", isSelected ? "true" : "false");
   });
@@ -2056,6 +2099,12 @@ function updateGoalFlash(delta) {
 }
 
 function handleAction() {
+  if (!gameReady) {
+    state.menuSummary = startupError || "The 3D field is still loading. Try again in a moment.";
+    syncUi();
+    return;
+  }
+
   if (state.phase === "menu") {
     return;
   }
@@ -2179,6 +2228,13 @@ function finishFlight(flight) {
 }
 
 function startNewGame() {
+  if (!gameReady) {
+    state.phase = "menu";
+    state.menuSummary = startupError || "The 3D field is still loading. Try again in a moment.";
+    syncUi();
+    return;
+  }
+
   clearMenuReturnTimer();
   state.phase = "power";
   state.kickIndex = 0;
@@ -2212,9 +2268,11 @@ function showMainMenu(summary = state.menuSummary) {
   state.goalCall = "";
   state.menuSummary =
     summary || "Kick 10 straight. Time the power, hold your nerve on direction, and watch the wind.";
-  materials.post.emissive.setHex(0x000000);
-  goalGroup.scale.setScalar(1);
-  placeKick(0);
+  if (gameReady) {
+    materials.post.emissive.setHex(0x000000);
+    goalGroup.scale.setScalar(1);
+    placeKick(0);
+  }
   syncUi();
 }
 
@@ -2690,6 +2748,7 @@ function syncUi() {
   ui.menuSummary.textContent = state.menuSummary;
   ui.windVane.style.setProperty("--wind-angle", `${(wind.angle + 90) % 360}deg`);
   ui.windVane.style.setProperty("--wind-sway", `${Math.max(2, wind.speed * 0.42)}deg`);
+  syncBackgroundButtons();
 
   const need = powerNeeded(kick, wind);
   ui.powerTarget.style.bottom = `${need * 100}%`;
@@ -2812,6 +2871,10 @@ function easeOutCubic(value) {
 }
 
 function resizeRenderer() {
+  if (!renderer || !camera) {
+    return;
+  }
+
   const width = window.innerWidth;
   const height = window.innerHeight;
   renderer.setSize(width, height, false);
