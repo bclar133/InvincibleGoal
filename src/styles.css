@@ -92,7 +92,29 @@ button {
   backdrop-filter: blur(18px);
 }
 
+.menu-title-lockup {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: clamp(74px, 7.2vw, 112px);
+  isolation: isolate;
+}
+
+.menu-title-icon {
+  position: absolute;
+  left: clamp(10px, 8vw, 118px);
+  top: 50%;
+  width: clamp(92px, 12vw, 156px);
+  height: auto;
+  opacity: 0.22;
+  transform: translate(-50%, -52%) rotate(-8deg);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .menu-card h1 {
+  position: relative;
+  z-index: 1;
   margin: 0;
   font-family: Bungee, Rajdhani, ui-sans-serif, system-ui, sans-serif;
   font-size: clamp(46px, 5.2vw, 76px);
