@@ -786,7 +786,7 @@ function createSpaceship() {
 
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 16), materials.alienSkin);
   head.position.set(0, 0.56, 0.1);
-  head.scale.set(0.84, 1.16, 0.72);
+  head.scale.set(0.76, 1.04, 0.66);
   group.add(head);
 
   const eyeGeometry = new THREE.SphereGeometry(0.055, 10, 8);
@@ -1865,7 +1865,7 @@ function createAmbientFlight(kind) {
     ? THREE.MathUtils.lerp(0.55, 0.95, Math.random())
     : kind === "pterodactyl"
     ? THREE.MathUtils.lerp(1.15, 1.7, Math.random())
-    : THREE.MathUtils.lerp(2.05, 2.65, Math.random());
+    : THREE.MathUtils.lerp(1.65, 2.15, Math.random());
 
   group.scale.setScalar(scale);
 
