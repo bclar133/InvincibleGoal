@@ -15,3 +15,9 @@ A browser-based 3D rugby league goal-kicking prototype.
 pnpm install
 pnpm run dev
 ```
+
+## Phone testing
+
+The GitHub Pages workflow publishes the game to:
+
+https://bclar133.github.io/InvincibleGoal/
