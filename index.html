@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A 3D rugby league goal-kicking timing prototype."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Invincible Goal</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="3D rugby league goal kicking field"></canvas>
+
+      <section class="main-menu" id="main-menu" aria-live="polite">
+        <div class="menu-card">
+          <p class="eyebrow">Kick for glory</p>
+          <h1>Invincible Goal</h1>
+          <p class="menu-summary" id="menu-summary">
+            Kick 10 straight. Time the power, hold your nerve on direction, and watch the wind.
+          </p>
+
+          <div class="menu-stat">
+            <span>Best this session</span>
+            <strong id="best-score">0 / 10</strong>
+          </div>
+
+          <div class="background-select" aria-label="Select background">
+            <p>Select background</p>
+            <div class="background-options">
+              <button class="background-option is-selected" type="button" data-background="stadium" aria-pressed="true">
+                Stadium
+              </button>
+              <button class="background-option" type="button" data-background="lava" aria-pressed="false">
+                Lava
+              </button>
+              <button class="background-option" type="button" data-background="space" aria-pressed="false">
+                Space
+              </button>
+            </div>
+          </div>
+
+          <button class="new-game-button" id="new-game-button" type="button">New game</button>
+          <a class="menu-link" href="https://www.brent-clark.com/" target="_blank" rel="noopener noreferrer">
+            Brent Clark Games
+          </a>
+        </div>
+      </section>
+
+      <a class="game-home-link" href="https://www.brent-clark.com/" target="_blank" rel="noopener noreferrer">
+        Brent Clark Games
+      </a>
+
+      <section class="hud" aria-live="polite">
+        <div class="hud__brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <p class="eyebrow">Invincible Goal</p>
+            <h1>Kick <span id="kick-number">1</span> of 10</h1>
+          </div>
+        </div>
+
+        <div class="hud__stats">
+          <div>
+            <span>Streak</span>
+            <strong id="streak">0</strong>
+          </div>
+          <div>
+            <span>Position</span>
+            <strong id="kick-position">Centre 22m</strong>
+          </div>
+          <div>
+            <span>Wind</span>
+            <strong class="wind-display">
+              <span class="wind-vane" id="wind-vane" aria-hidden="true">
+                <span class="vane-cardinal vane-n">N</span>
+                <span class="vane-cardinal vane-e">E</span>
+                <span class="vane-cardinal vane-s">S</span>
+                <span class="vane-cardinal vane-w">W</span>
+                <span class="vane-stem"></span>
+                <span class="vane-arrow">
+                  <span class="vane-head"></span>
+                  <span class="vane-tail"></span>
+                </span>
+              </span>
+              <span id="wind">Calm</span>
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <aside class="power-panel" aria-label="Power meter">
+        <div class="meter-label">
+          <span>Power</span>
+          <strong id="power-readout">0%</strong>
+        </div>
+        <div class="power-meter" id="power-meter">
+          <span class="power-target" id="power-target"></span>
+          <span class="power-marker" id="power-marker"></span>
+        </div>
+      </aside>
+
+      <section class="direction-panel" aria-label="Direction meter">
+        <div class="direction-meta">
+          <span>Direction</span>
+          <strong id="direction-readout">Centre</strong>
+        </div>
+        <div class="direction-meter" id="direction-meter">
+          <span class="direction-sweet" id="direction-sweet"></span>
+          <span class="wind-cue" id="wind-cue"></span>
+          <span class="direction-marker" id="direction-marker"></span>
+        </div>
+      </section>
+
+      <p class="coach-line" id="coach-line" aria-live="polite" aria-hidden="true">
+        <span>Coach</span>
+        Don't forget to check the wind.
+      </p>
+
+      <section class="message-panel">
+        <p id="phase-label">Set power</p>
+        <p id="result-label">Time the rising meter, then pick your line.</p>
+        <p class="instruction-label">Press Space, click, or tap to lock each meter.</p>
+        <button id="action-button" type="button">Set power</button>
+      </section>
+
+      <section class="fanfare" id="fanfare" aria-live="assertive" aria-hidden="true">
+        <p id="fanfare-small">The flags are up</p>
+        <strong id="fanfare-large">GOAL!</strong>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
