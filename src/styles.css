@@ -64,17 +64,17 @@ button {
   align-items: center;
   justify-content: flex-start;
   padding: clamp(18px, 4vw, 58px);
-  opacity: 0;
-  pointer-events: none;
+  opacity: 1;
+  pointer-events: auto;
   background:
     linear-gradient(90deg, rgba(2, 7, 9, 0.78), rgba(2, 7, 9, 0.28) 58%, rgba(2, 7, 9, 0.04)),
     linear-gradient(0deg, rgba(2, 7, 9, 0.48), rgba(2, 7, 9, 0.08));
   transition: opacity 180ms ease;
 }
 
-.phase-menu .main-menu {
-  opacity: 1;
-  pointer-events: auto;
+#app:not(.phase-menu) .main-menu {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .menu-card {
@@ -206,15 +206,30 @@ button {
   backdrop-filter: blur(14px);
 }
 
-.phase-menu .hud,
-.phase-menu .power-panel,
-.phase-menu .direction-panel,
-.phase-menu .message-panel,
-.phase-menu .coach-line,
-.phase-menu .fanfare,
-.phase-menu .game-home-link {
+.hud,
+.power-panel,
+.direction-panel,
+.message-panel,
+.game-home-link {
   opacity: 0;
+}
+
+.message-panel,
+.game-home-link {
   pointer-events: none;
+}
+
+#app[class^="phase-"]:not(.phase-menu) .hud,
+#app[class^="phase-"]:not(.phase-menu) .power-panel,
+#app[class^="phase-"]:not(.phase-menu) .direction-panel,
+#app[class^="phase-"]:not(.phase-menu) .message-panel,
+#app[class^="phase-"]:not(.phase-menu) .game-home-link {
+  opacity: 1;
+}
+
+#app[class^="phase-"]:not(.phase-menu) .message-panel,
+#app[class^="phase-"]:not(.phase-menu) .game-home-link {
+  pointer-events: auto;
 }
 
 .hud {

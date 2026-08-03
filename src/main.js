@@ -57,6 +57,8 @@ const ui = {
   fanfareLarge: document.querySelector("#fanfare-large"),
 };
 
+ui.app.className = "phase-menu";
+
 const canvas = document.querySelector("#game-canvas");
 const renderer = new THREE.WebGLRenderer({
   canvas,
