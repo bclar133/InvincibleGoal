@@ -390,62 +390,21 @@ button {
   --wind-sway: 2deg;
   position: relative;
   display: inline-block;
-  width: 62px;
-  height: 50px;
-  flex: 0 0 62px;
+  width: 54px;
+  height: 34px;
+  flex: 0 0 54px;
   color: #0d1517;
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.32));
 }
 
-.vane-cardinal {
-  position: absolute;
-  color: #dce9e9;
-  font-size: 12px;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.vane-n {
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.vane-e {
-  right: 1px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.vane-s {
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.vane-w {
-  left: 1px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.vane-stem {
-  position: absolute;
-  left: 50%;
-  top: 13px;
-  bottom: 10px;
-  width: 2px;
-  background: rgba(220, 232, 232, 0.68);
-  transform: translateX(-50%);
-}
-
 .vane-arrow {
   position: absolute;
-  left: 11px;
-  right: 11px;
-  top: 32px;
-  height: 4px;
+  left: 10px;
+  right: 7px;
+  top: calc(50% - 2px);
+  height: 5px;
   background: var(--blue);
+  border-radius: 999px;
   transform-origin: 50% 50%;
   transform: rotate(var(--wind-angle));
   animation: wind-vane-sway 1.35s ease-in-out infinite alternate;
@@ -453,44 +412,14 @@ button {
 
 .vane-head {
   position: absolute;
-  left: -10px;
+  left: -12px;
   top: 50%;
   width: 0;
   height: 0;
-  border-top: 9px solid transparent;
-  border-bottom: 9px solid transparent;
-  border-right: 16px solid var(--blue);
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 18px solid var(--blue);
   transform: translateY(-50%);
-}
-
-.vane-tail {
-  position: absolute;
-  right: -4px;
-  top: 50%;
-  width: 20px;
-  height: 18px;
-  border-left: 4px solid var(--blue);
-  transform: translateY(-50%) skewX(-18deg);
-}
-
-.vane-tail::before,
-.vane-tail::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  width: 22px;
-  height: 4px;
-  background: var(--blue);
-}
-
-.vane-tail::before {
-  top: 1px;
-  transform: rotate(-24deg);
-}
-
-.vane-tail::after {
-  bottom: 1px;
-  transform: rotate(24deg);
 }
 
 @keyframes wind-vane-sway {
@@ -878,9 +807,9 @@ button {
   }
 
   .wind-vane {
-    width: 70px;
-    height: 56px;
-    flex-basis: 70px;
+    width: 54px;
+    height: 34px;
+    flex-basis: 54px;
   }
 
   .power-panel {
@@ -964,7 +893,7 @@ button {
   }
 
   .wind-display {
-    gap: 14px;
+    gap: 10px;
   }
 
   #wind {
@@ -972,9 +901,9 @@ button {
   }
 
   .wind-vane {
-    width: 76px;
-    height: 60px;
-    flex-basis: 76px;
+    width: 56px;
+    height: 36px;
+    flex-basis: 56px;
   }
 
   .power-panel {
