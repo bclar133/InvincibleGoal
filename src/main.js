@@ -18,6 +18,7 @@ const POST_GOAL_INSIDE_SHARE = 0.75;
 const CELEBRATION_SECONDS = 6.5;
 const TWO_PI = Math.PI * 2;
 const SOUND_MUTED_STORAGE_KEY = "invincibleGoalSoundMuted";
+const MOBILE_METER_SPEED_SCALE = 0.86;
 
 const kicks = [
   { name: "Centre 22m", x: 0, z: 22 },
@@ -2123,13 +2124,14 @@ function nextAmbientDelay(backgroundId) {
 function updateMeters(now) {
   const kick = activeKick();
   const phaseSeconds = (now - state.phaseStarted) / 1000;
+  const speedScale = meterSpeedScale();
 
   if (state.phase === "power") {
-    state.livePower = edgeEasedMeter(phaseSeconds * powerSpeed(kick));
+    state.livePower = edgeEasedMeter(phaseSeconds * powerSpeed(kick) * speedScale);
   }
 
   if (state.phase === "direction") {
-    state.liveDirection = edgeEasedMeter(phaseSeconds * directionSpeed(kick)) * 2 - 1;
+    state.liveDirection = edgeEasedMeter(phaseSeconds * directionSpeed(kick) * speedScale) * 2 - 1;
   }
 
   syncMeters();
@@ -3007,6 +3009,12 @@ function powerSpeed(kick) {
 
 function directionSpeed(kick) {
   return 3.5 + state.kickIndex * 0.24 + Math.abs(kick.x) * 0.022;
+}
+
+function meterSpeedScale() {
+  const isNarrow = window.matchMedia?.("(max-width: 760px)").matches ?? window.innerWidth <= 760;
+  const isTouch = navigator.maxTouchPoints > 0 || window.matchMedia?.("(pointer: coarse)").matches;
+  return isNarrow && isTouch ? MOBILE_METER_SPEED_SCALE : 1;
 }
 
 function syncUi() {
